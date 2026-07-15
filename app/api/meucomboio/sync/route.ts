@@ -6,7 +6,7 @@
 //     http://127.0.0.1:3000/api/meucomboio/sync
 
 import { NextResponse } from "next/server";
-import { syncAllFeeds } from "@/lib/meucomboio/sync";
+import { recentSyncRuns, syncAllFeeds } from "@/lib/meucomboio/sync";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -23,4 +23,11 @@ export async function POST(req: Request) {
   const results = await syncAllFeeds();
   const ok = results.every((r) => r.ok);
   return NextResponse.json({ results }, { status: ok ? 200 : 502 });
+}
+
+// GET: recent ingestion runs with counts, warnings and duration. Public and
+// read-only: it is the pipeline's health page.
+export async function GET() {
+  const runs = await recentSyncRuns(20);
+  return NextResponse.json({ runs });
 }

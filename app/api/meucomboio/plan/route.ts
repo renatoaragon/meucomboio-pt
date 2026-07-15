@@ -1,5 +1,5 @@
 // GET /api/meucomboio/plan?feed=cp&from=<stopId>&to=<stopId>
-// Próximos comboios diretos entre duas estações, com hora de chegada.
+// Next direct trains between two stations, with arrival time.
 
 import { NextResponse } from "next/server";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";

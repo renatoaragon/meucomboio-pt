@@ -6,3 +6,10 @@ out/
 .env*.local
 *.tsbuildinfo
 .DS_Store
+
+# analytics artifacts
+analytics/profiles.yml
+analytics/*.duckdb
+analytics/target/
+analytics/dbt_packages/
+analytics/logs/

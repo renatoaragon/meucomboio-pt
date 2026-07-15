@@ -1,17 +1,18 @@
--- MeuComboioPT — tabelas GTFS (horários de comboios) no banco compartilhado.
+-- MeuComboioPT: GTFS tables (train timetables).
 --
--- ⚠️ O schema Prisma deste projeto é "generate only" (migrações vêm do
--- PsycoHub). Como no MyBoard e Work in Portugal, as tabelas são criadas por
--- este script idempotente, com prefixo meucomboio_ para nunca colidir.
+-- The schema is plain SQL by design: GTFS is a stable, well-known relational
+-- model and every query in the app is hand-written SQL through $queryRaw.
+-- The script is idempotent (CREATE ... IF NOT EXISTS), so it doubles as the
+-- migration mechanism: re-run it after pulling a version that adds tables.
 --
--- Modelo multi-operador: todas as tabelas têm "feedId" (ex.: 'cp',
--- 'fertagus') porque os IDs do GTFS só são únicos dentro de cada feed.
--- Horários guardados como segundos desde a meia-noite do dia de serviço
--- (INTEGER), porque o GTFS permite valores >24h (ex.: 25:10 = comboio da
--- 1h10 da madrugada que pertence ao serviço do dia anterior).
+-- Multi-operator model: every table carries "feedId" (e.g. 'cp', 'fertagus')
+-- because GTFS ids are only unique within a feed.
+-- Times are stored as seconds since midnight of the SERVICE day (INTEGER):
+-- GTFS allows values past 24h (e.g. 25:10 is the 1:10am train that belongs
+-- to the previous day's service).
 --
--- Como aplicar (uma vez, no servidor onde DATABASE_URL aponta):
---   npm run meucomboio:init
+-- Apply once (wherever DATABASE_URL points):
+--   npm run db:init
 
 CREATE TABLE IF NOT EXISTS "meucomboio_feeds" (
   "id"         TEXT PRIMARY KEY,
@@ -63,7 +64,7 @@ CREATE TABLE IF NOT EXISTS "meucomboio_stop_times" (
   PRIMARY KEY ("feedId", "tripId", "seq")
 );
 
--- Índice que sustenta a consulta de planeamento (partidas por estação).
+-- Backs the core planning query (departures by station).
 CREATE INDEX IF NOT EXISTS "meucomboio_stop_times_stop_idx"
   ON "meucomboio_stop_times" ("feedId", "stopId", "departure");
 
@@ -82,9 +83,30 @@ CREATE TABLE IF NOT EXISTS "meucomboio_calendar_dates" (
   "feedId"        TEXT NOT NULL,
   "serviceId"     TEXT NOT NULL,
   "date"          INTEGER NOT NULL, -- yyyymmdd
-  "exceptionType" INTEGER NOT NULL, -- 1 = adiciona, 2 = remove
+  "exceptionType" INTEGER NOT NULL, -- 1 = added, 2 = removed
   PRIMARY KEY ("feedId", "serviceId", "date")
 );
 
 CREATE INDEX IF NOT EXISTS "meucomboio_calendar_dates_date_idx"
   ON "meucomboio_calendar_dates" ("feedId", "date");
+
+-- One row per ingestion attempt: counts, data quality warnings, duration.
+-- Failed runs (download error or quality gate rejection) are recorded too,
+-- with "ok" = false and the reason in "error". Append-only log; on purpose
+-- there is no FK to feeds so a rejected first-ever run is still recorded.
+CREATE TABLE IF NOT EXISTS "meucomboio_sync_runs" (
+  "id"            BIGSERIAL PRIMARY KEY,
+  "feedId"        TEXT NOT NULL,
+  "startedAt"     TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "ok"            BOOLEAN NOT NULL,
+  "stops"         INTEGER,
+  "routes"        INTEGER,
+  "trips"         INTEGER,
+  "stopTimes"     INTEGER,
+  "warnings"      JSONB NOT NULL DEFAULT '[]',
+  "error"         TEXT,
+  "durationMs"    INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS "meucomboio_sync_runs_feed_idx"
+  ON "meucomboio_sync_runs" ("feedId", "startedAt");

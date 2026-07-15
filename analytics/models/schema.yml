@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: stg_departures
+    columns:
+      - name: stop_id
+        tests: [not_null]
+      - name: trip_id
+        tests: [not_null]
+      - name: departure_secs
+        tests: [not_null]
+
+  - name: stg_trips
+    columns:
+      - name: trip_id
+        tests: [not_null]
+      - name: route_id
+        tests: [not_null]
+
+  - name: mart_station_daily_departures
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [feed_id, stop_id, weekday_idx]
+    columns:
+      - name: departures
+        tests: [not_null]
+
+  - name: mart_route_service_span
+    columns:
+      - name: route_id
+        tests: [not_null, unique]
+
+  - name: mart_sync_health
+    columns:
+      - name: feed_id
+        tests: [not_null, unique]

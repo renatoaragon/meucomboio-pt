@@ -1,9 +1,9 @@
 "use client";
 
-// MeuComboioPT (cliente): geolocalização → estação mais próxima, escolha de
-// destino com autocomplete e listagem dos próximos comboios diretos.
-// A lista de estações vem inteira do servidor (~centenas de registos), por
-// isso a estação mais próxima e o autocomplete são calculados no browser.
+// MeuComboioPT (client): geolocation to nearest station, destination picker
+// with autocomplete, and a list of the next direct trains.
+// The full station list comes from the server (a few hundred records), so the
+// nearest station and the autocomplete are computed in the browser.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TripMapModal } from "./trip-map-modal";
@@ -40,8 +40,8 @@ const MODES: { id: TravelMode; label: string; icon: string }[] = [
   { id: "car", label: "Carro/mota", icon: "🚗" },
 ];
 
-// "Como chegar à estação de partida" a partir da localização atual, por modo,
-// com aviso se dá tempo para o próximo comboio (soonestMins).
+// "How to reach the departure station" from the current location, per mode,
+// with a warning on whether the next train is still reachable (soonestMins).
 function AccessDirections({
   userPos,
   station,
@@ -176,14 +176,14 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Minutos até uma partida (departureSecs é relógio de Lisboa em segundos).
+// Minutes until a departure (departureSecs is Lisbon wall clock in seconds).
 function minutesUntil(departureSecs: number) {
   const now = new Date().toLocaleString("en-GB", { timeZone: "Europe/Lisbon", hour12: false });
   const m = /(\d{2}):(\d{2}):(\d{2})/.exec(now);
   if (!m) return null;
   const nowSecs = Number(m[1]) % 24 * 3600 + Number(m[2]) * 60 + Number(m[3]);
   let diff = departureSecs - nowSecs;
-  if (diff < -43200) diff += 86400; // partida já no dia seguinte
+  if (diff < -43200) diff += 86400; // departure is already on the next day
   return Math.round(diff / 60);
 }
 

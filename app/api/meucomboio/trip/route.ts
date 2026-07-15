@@ -1,5 +1,5 @@
 // GET /api/meucomboio/trip?feed=cp&from=<stopId>&to=<stopId>&date=YYYY-MM-DD&dep=HH:MM
-// Paragens (com GPS e horas) de um comboio específico, para o mapa do trajeto.
+// Stops (with GPS and times) of a specific train, for the route map.
 
 import { NextResponse } from "next/server";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";

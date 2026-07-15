@@ -1,0 +1,28 @@
+name: Scheduled GTFS sync
+
+# Triggers the deployed app's sync endpoint every morning (CP refreshes its
+# feed daily). Configure two repository secrets to enable it:
+#   SYNC_URL              e.g. https://your-deployment/api/meucomboio/sync
+#   MEUCOMBOIO_SYNC_TOKEN the same token set in the app's environment
+# Without the secrets the job exits quietly, so forks are unaffected.
+
+on:
+  schedule:
+    - cron: '30 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger sync endpoint
+        env:
+          SYNC_URL: ${{ secrets.SYNC_URL }}
+          SYNC_TOKEN: ${{ secrets.MEUCOMBOIO_SYNC_TOKEN }}
+        run: |
+          if [ -z "$SYNC_URL" ] || [ -z "$SYNC_TOKEN" ]; then
+            echo "SYNC_URL / MEUCOMBOIO_SYNC_TOKEN secrets not set; skipping."
+            exit 0
+          fi
+          curl --fail --silent --show-error --max-time 300 \
+            -X POST -H "x-sync-token: $SYNC_TOKEN" "$SYNC_URL"

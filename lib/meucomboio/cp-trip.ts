@@ -1,5 +1,5 @@
-// MeuComboioPT: detalhe de um comboio: a lista ordenada de paragens (com GPS
-// e horas) para desenhar o trajeto no mapa e estimar a posição.
+// MeuComboioPT: detail of a single train: the ordered list of stops (with GPS
+// and times) used to draw the route on the map and estimate the position.
 
 import { searchJourneys, type OutwardTrip } from "./cp-api";
 
@@ -7,8 +7,8 @@ export type TripStop = {
   name: string;
   lat: number;
   lon: number;
-  arrival: string | null; // "HH:MM" (null na origem)
-  departure: string | null; // "HH:MM" (null no destino)
+  arrival: string | null; // "HH:MM" (null at the origin)
+  departure: string | null; // "HH:MM" (null at the destination)
 };
 
 export type TripDetail = {
@@ -28,8 +28,8 @@ function flattenStops(trip: OutwardTrip): TripStop[] {
       const lat = Number(s.latitude);
       const lon = Number(s.longitude);
       if (!s.station?.designation || Number.isNaN(lat) || Number.isNaN(lon)) continue;
-      // Evita duplicar a estação de transbordo (fim de uma secção = início da
-      // seguinte) quando as coordenadas coincidem.
+      // Avoid duplicating the transfer station (end of one section = start of
+      // the next) when the coordinates match.
       const last = stops[stops.length - 1];
       if (last && last.lat === lat && last.lon === lon) continue;
       stops.push({
@@ -41,7 +41,7 @@ function flattenStops(trip: OutwardTrip): TripStop[] {
       });
     }
   }
-  // Origem não tem chegada; destino não tem partida.
+  // The origin has no arrival; the destination has no departure.
   if (stops.length) {
     stops[0].arrival = null;
     stops[stops.length - 1].departure = null;

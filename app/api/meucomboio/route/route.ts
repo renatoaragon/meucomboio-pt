@@ -1,5 +1,5 @@
 // GET /api/meucomboio/route?fLat=&fLon=&tLat=&tLon=&mode=foot|bike|car
-// Tempo, distância e direções do utilizador até à estação, por modo.
+// Time, distance and directions from the user to the station, per mode.
 
 import { NextResponse } from "next/server";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";

@@ -1,9 +1,9 @@
 "use client";
 
-// Modal com o mapa do trajeto de um comboio: linha do percurso, pin em cada
-// estação, destaque para origem e destino, e um marcador da posição estimada
-// (interpolada pelo horário + atraso real quando a CP o publica).
-// Não é GPS a bordo, é uma estimativa baseada no horário; indicado no ecrã.
+// Modal with the map of a train's route: route line, a pin at each station,
+// highlights for origin and destination, and a marker for the estimated
+// position (interpolated from the timetable plus the real delay when CP
+// publishes it). Not onboard GPS, just a schedule-based estimate; stated on screen.
 
 import { useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -50,7 +50,7 @@ function lisbonNowSec() {
   return Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]);
 }
 
-// Timeline absoluta (segundos, monotónica) para lidar com travessia da meia-noite.
+// Absolute timeline (seconds, monotonic) to handle crossing midnight.
 function buildTimeline(stops: TripStop[]) {
   let base = 0;
   let prev = -Infinity;
@@ -81,7 +81,7 @@ function estimatePosition(stops: TripStop[], delayMin: number | null): Position 
   const lastArr = arr[stops.length - 1] ?? dep[stops.length - 1] ?? firstDep;
 
   let now = lisbonNowSec();
-  if (lastArr > 86400 && now < 4 * 3600) now += 86400; // check de madrugada
+  if (lastArr > 86400 && now < 4 * 3600) now += 86400; // after-midnight check
   const sched = now - (delayMin ?? 0) * 60;
 
   if (sched <= firstDep) return { state: "before" };
@@ -91,11 +91,11 @@ function estimatePosition(stops: TripStop[], delayMin: number | null): Position 
     const d = dep[i] ?? arr[i];
     const a = arr[i + 1] ?? dep[i + 1];
     if (d == null || a == null) continue;
-    // Parado na estação i (dwell).
+    // Dwelling at station i.
     if (arr[i] != null && dep[i] != null && sched >= (arr[i] as number) && sched < (dep[i] as number)) {
       return { state: "running", lat: stops[i].lat, lon: stops[i].lon, nextIndex: i };
     }
-    // A viajar entre i e i+1.
+    // Traveling between i and i+1.
     if (sched >= d && sched < a) {
       const f = a > d ? (sched - d) / (a - d) : 0;
       return {
@@ -137,7 +137,7 @@ export function TripMapModal({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const trainMarker = useRef<any>(null);
 
-  // Carrega o trajeto.
+  // Load the trip.
   useEffect(() => {
     let alive = true;
     const params = new URLSearchParams({ feed, from, to, date, dep });
@@ -160,14 +160,14 @@ export function TripMapModal({
     };
   }, [feed, from, to, date, dep]);
 
-  // Recalcula a posição estimada a cada 10s.
+  // Recompute the estimated position every 10s.
   useEffect(() => {
     if (!trip) return;
     const id = setInterval(() => setPos(estimatePosition(trip.stops, trip.delayMin)), 10000);
     return () => clearInterval(id);
   }, [trip]);
 
-  // Inicializa o mapa quando o trajeto chega.
+  // Initialize the map once the trip data arrives.
   useEffect(() => {
     if (!trip || !mapNode.current) return;
     let cleanup = () => {};
@@ -200,7 +200,7 @@ export function TripMapModal({
           paint: { "line-color": "#34d399", "line-width": 4, "line-opacity": 0.9 },
         });
 
-        // Melhoria progressiva: substitui a reta pela geometria sobre os trilhos.
+        // Progressive enhancement: replace the straight line with the on-rail geometry.
         fetch("/api/meucomboio/shape", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -220,7 +220,7 @@ export function TripMapModal({
           })
           .catch(() => {});
 
-        // Pin em cada estação (origem = verde, destino = âmbar/maior, resto = ponto).
+        // Pin at each station (origin = green, destination = amber/larger, others = dot).
         trip.stops.forEach((s, i) => {
           const isOrigin = i === 0;
           const isDest = i === trip.stops.length - 1;
@@ -240,7 +240,7 @@ export function TripMapModal({
             .addTo(map);
         });
 
-        // Marcador do comboio (posição estimada).
+        // Train marker (estimated position).
         const t = document.createElement("div");
         t.textContent = "🚆";
         t.style.cssText = "font-size:26px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));transition:all .8s linear;";
@@ -252,7 +252,7 @@ export function TripMapModal({
     return () => cleanup();
   }, [trip, from, to]);
 
-  // Atualiza o marcador do comboio conforme a posição estimada.
+  // Update the train marker as the estimated position changes.
   useEffect(() => {
     const map = mapRef.current;
     const marker = trainMarker.current;
@@ -264,7 +264,7 @@ export function TripMapModal({
     }
   }, [pos]);
 
-  // "Faltam N paragens até ao destino".
+  // "N stops remaining until the destination".
   const destIndex = trip ? trip.stops.length - 1 : 0;
   const nextIndex = pos && pos.state === "running" ? pos.nextIndex : null;
   const stopsToDest = nextIndex != null ? destIndex - nextIndex : null;

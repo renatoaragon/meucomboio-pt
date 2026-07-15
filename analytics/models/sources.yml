@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: raw
+    description: GTFS tables loaded by the app's sync pipeline (Postgres, attached read-only).
+    database: pg
+    schema: public
+    tables:
+      - name: meucomboio_stops
+      - name: meucomboio_routes
+      - name: meucomboio_trips
+      - name: meucomboio_stop_times
+      - name: meucomboio_calendar
+      - name: meucomboio_calendar_dates
+      - name: meucomboio_sync_runs

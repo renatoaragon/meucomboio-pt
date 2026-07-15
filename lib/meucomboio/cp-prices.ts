@@ -1,11 +1,11 @@
-// MeuComboioPT: preços por comboio, derivados da travel-api da CP.
-// Best-effort: qualquer falha devolve mapa vazio e a app mostra os horários
-// sem preço; nunca bloqueia a consulta principal.
+// MeuComboioPT: per-train prices, derived from CP's travel-api.
+// Best-effort: any failure returns an empty map and the app shows timetables
+// without prices; it never blocks the main query.
 
 import { searchJourneys } from "./cp-api";
 
 export type PriceInfo = { second: number | null; first: number | null }; // euros
-export type PriceMap = Map<string, PriceInfo>; // chave "HH:MM" (partida)
+export type PriceMap = Map<string, PriceInfo>; // keyed by "HH:MM" (departure)
 
 export async function fetchPrices(fromStopId: string, toStopId: string, dateIso: string): Promise<PriceMap> {
   const prices: PriceMap = new Map();

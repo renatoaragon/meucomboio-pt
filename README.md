@@ -43,11 +43,22 @@ POST /api/meucomboio/sync         directions.ts
 
 - **Ingestion**: `POST /api/meucomboio/sync` (token-authenticated, cron-driven)
   downloads each operator's GTFS zip, parses it with a dependency-free CSV
-  parser and reloads the tables idempotently.
+  parser and swaps the snapshot inside a single transaction.
+- **Data quality gate**: every feed is validated BEFORE it touches the
+  database: required files, referential integrity, calendar staleness and
+  volume drift against the previous load. A bad snapshot is rejected and the
+  app keeps serving the previous one. See
+  [lib/meucomboio/quality.ts](lib/meucomboio/quality.ts).
+- **Observability**: every ingestion attempt is recorded in
+  `meucomboio_sync_runs` (counts, warnings, duration, failure reason);
+  `GET /api/meucomboio/sync` exposes the recent runs as a health page.
 - **Storage**: plain PostgreSQL, schema in [scripts/init.sql](scripts/init.sql).
   Prisma is used only as a typed SQL executor (`$queryRaw`), no ORM models.
 - **Planning**: pure SQL + a small amount of TypeScript over `stop_times`,
   `trips`, `calendar` and `calendar_dates`.
+- **Analytics**: a dbt + DuckDB layer attaches Postgres read-only and builds
+  marts for service offer per station, route service span and pipeline
+  health. See [analytics/](analytics/).
 
 ## Getting started
 
@@ -70,14 +81,22 @@ curl -X POST -H "x-sync-token: $MEUCOMBOIO_SYNC_TOKEN" \
 - [CP GTFS feed](https://publico.cp.pt/gtfs/gtfs.zip), refreshed daily by the
   operator. This project is not affiliated with CP - Comboios de Portugal.
 
+## Testing
+
+```bash
+npm run typecheck
+npm test          # vitest: GTFS parser + data quality gate
+```
+
+CI runs typecheck, tests and a production build on every push. A scheduled
+workflow ([.github/workflows/sync.yml](.github/workflows/sync.yml)) can
+trigger the daily feed reload against your deployment.
+
 ## Roadmap
 
-- Data quality checks on every sync (referential integrity, row-count drift)
-  with a persisted sync-run report
-- Scheduled sync via GitHub Actions in addition to server cron
-- Analytics layer (dbt + DuckDB): departures per station/line, service
-  coverage, timetable evolution over time
-- Unit tests for the GTFS parser and the trip planner
+- Additional operators (Fertagus) once a stable public GTFS zip is confirmed
+- Real-time delay feed integration when CP exposes one publicly
+- Screenshots and a short demo GIF
 
 ## License
 

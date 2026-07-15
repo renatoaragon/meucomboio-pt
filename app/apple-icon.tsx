@@ -1,4 +1,4 @@
-// Ícone de "adicionar ao ecrã principal" no iOS (Safari usa o apple-icon).
+// iOS "add to home screen" icon (Safari uses the apple-icon).
 import { ImageResponse } from "next/og";
 
 export const size = { width: 180, height: 180 };

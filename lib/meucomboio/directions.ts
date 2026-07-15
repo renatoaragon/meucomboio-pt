@@ -1,7 +1,7 @@
-// MeuComboioPT: direções e tempo do utilizador até à estação, por modo de
-// transporte. Usa o OpenRouteService (chamado do servidor, chave em
-// MEUCOMBOIO_ORS_KEY) para rotas e instruções reais. Sem chave, cai para uma
-// estimativa por distância em linha reta (sem instruções passo-a-passo).
+// MeuComboioPT: directions and travel time from the user to the station, per
+// transport mode. Uses OpenRouteService (called server-side, key in
+// MEUCOMBOIO_ORS_KEY) for real routes and instructions. Without a key, falls
+// back to a straight-line distance estimate (no step-by-step instructions).
 
 export type TravelMode = "foot" | "bike" | "car";
 
@@ -11,7 +11,7 @@ export type Directions = {
   distanceKm: number;
   geometry: [number, number][]; // [lon, lat]
   steps: { instruction: string; distanceM: number }[];
-  estimated: boolean; // true = estimativa por distância (sem ORS)
+  estimated: boolean; // true = distance-based estimate (no ORS)
 };
 
 const ORS_PROFILE: Record<TravelMode, string> = {
@@ -20,8 +20,8 @@ const ORS_PROFILE: Record<TravelMode, string> = {
   car: "driving-car",
 };
 
-// Velocidades médias urbanas para a estimativa de fallback (km/h) e fator de
-// desvio (a rua real é mais longa que a linha reta).
+// Average urban speeds for the fallback estimate (km/h) and a detour factor
+// (the real street path is longer than the straight line).
 const FALLBACK_KMH: Record<TravelMode, number> = { foot: 4.8, bike: 15, car: 30 };
 const DETOUR_FACTOR = 1.35;
 
@@ -76,7 +76,7 @@ export async function fetchDirections(
           [from.lon, from.lat],
           [to.lon, to.lat],
         ],
-        language: "pt", // instruções em português
+        language: "pt", // instructions in Portuguese
         units: "m",
       }),
       signal: AbortSignal.timeout(8000),

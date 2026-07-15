@@ -1,10 +1,9 @@
-// MeuComboioPT: utilitários GTFS: parser CSV e conversões de tempo/data.
+// GTFS utilities: CSV parser and time/date conversions.
 
-// Parser CSV conforme o GTFS (RFC 4180): campos entre aspas podem conter
-// vírgulas, quebras de linha e aspas duplicadas. Devolve linhas como objetos
-// indexados pelo cabeçalho.
+// CSV parser per the GTFS spec (RFC 4180): quoted fields may contain commas,
+// line breaks and doubled quotes. Returns rows as objects keyed by header.
 export function parseCsv(text: string): Record<string, string>[] {
-  // Remove BOM que a CP inclui nos ficheiros.
+  // Strip the BOM that some operators include in their files.
   if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
 
   const rows: string[][] = [];
@@ -56,8 +55,9 @@ export function parseCsv(text: string): Record<string, string>[] {
   });
 }
 
-// "HH:MM:SS" → segundos desde a meia-noite do dia de serviço. O GTFS permite
-// horas >= 24 (comboios de madrugada do serviço do dia anterior).
+// "HH:MM:SS" to seconds since midnight of the service day. GTFS allows
+// hours >= 24 (early-morning trains that belong to the previous day's
+// service).
 export function timeToSecs(t: string): number | null {
   const m = /^(\d{1,2}):(\d{2}):(\d{2})$/.exec(t);
   if (!m) return null;
@@ -71,7 +71,7 @@ export function secsToHHMM(secs: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-// Data/hora atual em Lisboa (o servidor pode não estar em Europe/Lisbon).
+// Current date/time in Lisbon (the server may not run in Europe/Lisbon).
 export function lisbonNow(): { dateInt: number; weekday: number; secs: number } {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Europe/Lisbon",
@@ -88,11 +88,11 @@ export function lisbonNow(): { dateInt: number; weekday: number; secs: number } 
   const dateInt = Number(`${get("year")}${get("month")}${get("day")}`);
   const secs = Number(get("hour")) % 24 * 3600 + Number(get("minute")) * 60 + Number(get("second"));
   const weekdayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const weekday = weekdayNames.indexOf(get("weekday")); // 0 = segunda
+  const weekday = weekdayNames.indexOf(get("weekday")); // 0 = Monday
   return { dateInt, weekday, secs };
 }
 
-// Dia anterior de um yyyymmdd (para apanhar serviços com horas >= 24).
+// Previous day of a yyyymmdd integer (to catch services with hours >= 24).
 export function previousDate(dateInt: number): number {
   const y = Math.floor(dateInt / 10000);
   const m = Math.floor((dateInt % 10000) / 100) - 1;
@@ -102,7 +102,7 @@ export function previousDate(dateInt: number): number {
   return dt.getUTCFullYear() * 10000 + (dt.getUTCMonth() + 1) * 100 + dt.getUTCDate();
 }
 
-// Distância haversine em km (para a estação mais próxima).
+// Haversine distance in km (nearest-station lookup).
 export function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const rad = Math.PI / 180;
   const dLat = (lat2 - lat1) * rad;

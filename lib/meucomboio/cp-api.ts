@@ -1,6 +1,6 @@
-// MeuComboioPT: cliente da travel-api que o site da CP usa (api-gateway).
-// As credenciais são as do frontend público da CP: lemos o /fe-config.json em
-// runtime, por isso continuam válidas mesmo que a CP as rode.
+// MeuComboioPT: client for the travel-api used by the CP website (api-gateway).
+// Credentials are the ones from CP's public frontend: we read /fe-config.json
+// at runtime, so they stay valid even if CP rotates them.
 
 const CONFIG_URL = "https://www.cp.pt/fe-config.json";
 const TIMEOUT_MS = 6000;
@@ -18,7 +18,7 @@ async function getConfig(): Promise<CpConfig> {
   return c;
 }
 
-// GTFS usa "94_2006"; a travel-api usa "94-2006".
+// GTFS uses "94_2006"; the travel-api uses "94-2006".
 export const toApiCode = (stopId: string) => stopId.replace(/_/g, "-");
 
 export type BasePrice = { travelClass?: number; priceType?: number; centsValue?: number };
@@ -44,7 +44,7 @@ export type OutwardTrip = {
   travelSections?: TravelSection[];
 };
 
-// Pesquisa de viagens (a resposta traz preços E paragens com GPS/horas).
+// Journey search (the response carries prices AND stops with GPS/times).
 export async function searchJourneys(fromStopId: string, toStopId: string, dateIso: string): Promise<OutwardTrip[]> {
   const cfg = await getConfig();
   const res = await fetch(`${cfg.travelApiUrl}/journeys`, {

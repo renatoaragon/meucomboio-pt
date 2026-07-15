@@ -1,0 +1,13 @@
+# Copy to profiles.yml (same folder) and fill in the Postgres connection.
+# DuckDB attaches the app's Postgres database read-only and materializes the
+# marts locally in meucomboio.duckdb, so analytics never loads the app DB.
+meucomboio:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: meucomboio.duckdb
+      attach:
+        - path: "dbname=meucomboio host=localhost user=postgres password=postgres"
+          type: postgres
+          alias: pg

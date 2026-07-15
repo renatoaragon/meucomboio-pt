@@ -5,8 +5,8 @@ export const metadata: Metadata = {
   title: "MeuComboioPT: Qual o próximo comboio?",
   description:
     "Descobre a estação de comboios mais próxima de ti, escolhe o destino e vê o próximo comboio e a hora de chegada. Horários oficiais da CP.",
-  // Instalável no ecrã principal do iOS como app autónoma, com o nome curto
-  // por baixo do ícone 🚈.
+  // Installable on the iOS home screen as a standalone app, with the short
+  // name under the 🚈 icon.
   appleWebApp: {
     capable: true,
     title: "MeuComboio",

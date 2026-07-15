@@ -1,14 +1,15 @@
-// MeuComboioPT: geometria da rota SOBRE OS TRILHOS.
-// O GTFS da CP não traz shapes.txt, por isso a linha do percurso é obtida do
-// OpenStreetMap: pede-se a rede ferroviária num corredor à volta das estações
-// (Overpass), constrói-se um grafo pelos IDs de nó do OSM e faz-se o caminho
-// mais curto sobre o trilho entre estações consecutivas.
+// MeuComboioPT: route geometry ON THE RAILS.
+// CP's GTFS ships no shapes.txt, so the route line is derived from
+// OpenStreetMap: fetch the rail network in a corridor around the stations
+// (Overpass), build a graph keyed by OSM node IDs, and run a shortest path
+// along the track between consecutive stations.
 //
-// Best-effort: se o Overpass falhar ou um troço ficar desconexo, cai para a
-// linha reta desse troço. A geometria é estática → cache em memória por rota.
+// Best-effort: if Overpass fails or a segment ends up disconnected, that
+// segment falls back to a straight line. The geometry is static, so it is
+// cached in memory per route.
 
 type LatLon = { lat: number; lon: number };
-type Coord = [number, number]; // [lon, lat] (formato GeoJSON/MapLibre)
+type Coord = [number, number]; // [lon, lat] (GeoJSON/MapLibre format)
 
 const OVERPASS_ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
@@ -48,13 +49,13 @@ async function fetchRailNetwork(stops: LatLon[]): Promise<OverpassWay[]> {
       const ways = data.elements.filter((e) => e.type === "way" && e.geometry && e.nodes);
       if (ways.length) return ways;
     } catch {
-      // tenta o próximo endpoint
+      // try the next endpoint
     }
   }
   return [];
 }
 
-// Min-heap simples para o Dijkstra (evita O(V²) e bloqueio do event loop).
+// Simple min-heap for Dijkstra (avoids O(V²) and blocking the event loop).
 class MinHeap {
   private a: [number, number][] = []; // [dist, node]
   push(item: [number, number]) {
@@ -163,8 +164,8 @@ function shortestPath(graph: Graph, src: number, dst: number): Coord[] | null {
   return path;
 }
 
-// Devolve a polilinha [lon,lat] que segue o trilho ao longo das paragens.
-// Fallback total = as próprias coordenadas das estações (linha reta).
+// Returns the [lon,lat] polyline that follows the track along the stops.
+// Full fallback = the station coordinates themselves (straight line).
 export async function fetchRailShape(cacheKey: string, stops: LatLon[]): Promise<Coord[]> {
   const straight: Coord[] = stops.map((s) => [s.lon, s.lat]);
   if (stops.length < 2) return straight;
@@ -184,7 +185,7 @@ export async function fetchRailShape(cacheKey: string, stops: LatLon[]): Promise
     const b = snapped[i + 1];
     const seg = a != null && b != null ? shortestPath(graph, a, b) : null;
     const piece = seg && seg.length > 1 ? seg : [[stops[i].lon, stops[i].lat] as Coord, [stops[i + 1].lon, stops[i + 1].lat] as Coord];
-    if (i > 0) piece.shift(); // evita duplicar o nó de junção
+    if (i > 0) piece.shift(); // avoid duplicating the junction node
     shape.push(...piece);
   }
 

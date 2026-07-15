@@ -1,0 +1,12 @@
+name: meucomboio_analytics
+version: "1.0.0"
+profile: meucomboio
+
+model-paths: ["models"]
+
+models:
+  meucomboio_analytics:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

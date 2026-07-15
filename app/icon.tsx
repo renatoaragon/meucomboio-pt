@@ -1,5 +1,5 @@
-// Ícone da app (favicon + PWA) do MeuComboioPT: emoji 🚈 sobre o verde da
-// marca, gerado como imagem para renderizar igual em todo o lado.
+// MeuComboioPT app icon (favicon + PWA): the 🚈 emoji over the brand green,
+// generated as an image so it renders the same everywhere.
 import { ImageResponse } from "next/og";
 
 export const size = { width: 512, height: 512 };

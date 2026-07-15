@@ -1,6 +1,6 @@
 // POST /api/meucomboio/shape  { from, to, stops: [{lat,lon}, ...] }
-// Devolve a polilinha da rota sobre os trilhos (OSM). Melhoria progressiva:
-// o mapa desenha a reta primeiro e substitui por esta quando chega.
+// Returns the route polyline over the rails (OSM). Progressive enhancement:
+// the map draws the straight line first and swaps it for this once it arrives.
 
 import { NextResponse } from "next/server";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";

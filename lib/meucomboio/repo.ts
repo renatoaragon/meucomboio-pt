@@ -1,5 +1,5 @@
-// MeuComboioPT, consultas: estações, serviços ativos e planeamento de
-// viagens diretas (sem transbordo) por feed.
+// MeuComboioPT, queries: stations, active services and planning of direct
+// journeys (no transfers) per feed.
 
 import { prisma } from "@/lib/prisma";
 import { lisbonNow, previousDate, secsToHHMM } from "./gtfs";
@@ -16,8 +16,8 @@ export type Journey = {
   departureSecs: number;
   durationMin: number;
   stopsBetween: number;
-  priceSecond: number | null; // euros, 2.ª classe (null se indisponível)
-  priceFirst: number | null; // euros, 1.ª classe
+  priceSecond: number | null; // euros, 2nd class (null if unavailable)
+  priceFirst: number | null; // euros, 1st class
 };
 
 export async function listStations(): Promise<Station[]> {
@@ -34,8 +34,8 @@ export async function feedStatus() {
 
 const WEEKDAY_COLS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
-// service_ids ativos num dia de serviço: calendar (dia da semana + intervalo)
-// corrigido pelas exceções de calendar_dates (1 adiciona, 2 remove).
+// service_ids active on a service day: calendar (weekday + date range)
+// adjusted by calendar_dates exceptions (1 adds, 2 removes).
 async function activeServiceIds(feedId: string, dateInt: number, weekday: number): Promise<string[]> {
   const col = WEEKDAY_COLS[weekday];
   const rows = await prisma.$queryRawUnsafe<{ serviceId: string }[]>(
@@ -93,9 +93,9 @@ async function directTrips(
   );
 }
 
-// Próximas viagens diretas a partir de agora (hora de Lisboa). Consulta o
-// serviço de hoje e também o de ontem (para horários GTFS >= 24h, i.e.
-// comboios de madrugada que pertencem ao dia de serviço anterior).
+// Next direct journeys starting now (Lisbon time). Queries today's service
+// and also yesterday's (for GTFS times >= 24h, i.e. after-midnight trains
+// that belong to the previous service day).
 export async function planJourneys(feedId: string, fromStop: string, toStop: string, limit = 8): Promise<Journey[]> {
   const { dateInt, weekday, secs } = lisbonNow();
   const yDate = previousDate(dateInt);
@@ -111,7 +111,7 @@ export async function planJourneys(feedId: string, fromStop: string, toStop: str
     directTrips(feedId, fromStop, toStop, yesterdayServices, secs + 86400, limit),
   ]);
 
-  // Normaliza os de ontem para o relógio de hoje (dep - 86400) e ordena tudo.
+  // Normalize yesterday's trips to today's clock (dep - 86400) and sort everything.
   const all = [
     ...today.map((j) => ({ ...j, clockDep: j.dep, clockArr: j.arr })),
     ...yesterday.map((j) => ({ ...j, clockDep: j.dep - 86400, clockArr: j.arr - 86400 })),
@@ -119,8 +119,8 @@ export async function planJourneys(feedId: string, fromStop: string, toStop: str
 
   const selected = all.slice(0, limit);
 
-  // Preços só para a CP (a travel-api é exclusiva da CP). Casa por hora de
-  // partida ("HH:MM"). Best-effort: se falhar, os preços ficam a null.
+  // Prices only for CP (the travel-api is CP-only). Matched by departure
+  // time ("HH:MM"). Best-effort: on failure, prices stay null.
   const iso = `${Math.floor(dateInt / 10000)}-${String(Math.floor((dateInt % 10000) / 100)).padStart(2, "0")}-${String(dateInt % 100).padStart(2, "0")}`;
   const priceMap = feedId === "cp" && selected.length > 0
     ? await fetchPrices(fromStop, toStop, iso)

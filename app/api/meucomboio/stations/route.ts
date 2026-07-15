@@ -1,6 +1,6 @@
-// GET /api/meucomboio/stations: lista completa de estações (id, nome, GPS).
-// O cliente usa esta lista para autocomplete e para achar a estação mais
-// próxima; cache de 1h porque só muda quando o GTFS é ressincronizado.
+// GET /api/meucomboio/stations: full station list (id, name, GPS).
+// The client uses this list for autocomplete and to find the nearest station;
+// cached for 1h because it only changes when the GTFS feed is resynced.
 
 import { NextResponse } from "next/server";
 import { listStations, feedStatus } from "@/lib/meucomboio/repo";
