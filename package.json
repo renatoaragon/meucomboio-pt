@@ -1,0 +1,31 @@
+{
+  "name": "meucomboio-pt",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Next train departures for Portugal. GTFS data pipeline + real-time trip planner for CP (Comboios de Portugal).",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "db:init": "psql \"$DATABASE_URL\" -f scripts/init.sql",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "adm-zip": "^0.5.18",
+    "maplibre-gl": "^5.24.0",
+    "next": "16.2.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/adm-zip": "^0.5.8",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "prisma": "^6.19.3",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

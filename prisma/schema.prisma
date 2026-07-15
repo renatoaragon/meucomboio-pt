@@ -1,0 +1,10 @@
+// The GTFS tables are plain SQL (scripts/init.sql) and every query in the app
+// uses $queryRaw, so this schema only wires the client to the database.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
