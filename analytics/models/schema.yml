@@ -34,3 +34,13 @@ models:
     columns:
       - name: feed_id
         tests: [not_null, unique]
+
+  - name: mart_operator_coverage
+    description: "Network footprint per operator: stations, routes, trips and scheduled departures."
+    columns:
+      - name: feed_id
+        tests: [not_null, unique]
+      - name: stations_served
+        tests: [not_null]
+      - name: scheduled_departures
+        tests: [not_null]

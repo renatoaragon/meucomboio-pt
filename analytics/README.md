@@ -10,6 +10,7 @@ puts load on the serving database.
 |---|---|
 | `mart_station_daily_departures` | How many trains leave each station per weekday, first/last departure |
 | `mart_route_service_span` | Trips, stations served and daily service span per route |
+| `mart_operator_coverage` | Network footprint per operator (CP, Fertagus): stations, routes, trips, departures |
 | `mart_sync_health` | Ingestion success rate, duration and warnings from the sync run log |
 
 ## Running
