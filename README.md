@@ -60,6 +60,28 @@ POST /api/meucomboio/sync         directions.ts
   marts for service offer per station, route service span and pipeline
   health. See [analytics/](analytics/).
 
+## Design principles
+
+MeuComboioPT is a real product with real users, but the data engineering inside it
+holds to the same discipline as my portfolio work, not a lower bar because it ships.
+Tools are the disposable part: the GTFS parser, Postgres and the dbt layer could be
+swapped without changing what the pipeline guarantees. What lasts is the shape.
+
+- **A quality gate stands in front of production.** Every GTFS feed is validated
+  before it touches the database (required files, referential integrity, calendar
+  staleness, volume drift against the last load). A bad snapshot is rejected and the
+  app keeps serving the previous one, so a broken upstream never becomes a broken
+  product. It is the same gate idea as
+  [spark-retail-etl](https://github.com/renatoaragon/spark-retail-etl), guarding a
+  live feed instead of a batch.
+- **The swap is atomic.** A new snapshot replaces the old inside a single
+  transaction, so the app never reads a half-loaded feed.
+- **Every ingestion is observable.** Each run records counts, warnings, duration and
+  failure reason, exposed as a health endpoint. A pipeline you cannot see is one you
+  cannot trust.
+- **Analytics sits beside the app, read-only.** A dbt + DuckDB layer attaches
+  Postgres read-only and builds marts without adding load or risk to the serving path.
+
 ## Getting started
 
 ```bash
